@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { FaUser } from 'react-icons/fa'
-import { useSelector, useDispatch } from 'react-redux'
-import { register } from '../features/auth/authSlice'
+import { useDispatch, useSelector } from 'react-redux'
+import axios from 'axios'
 import Spinner from '../components/Spinner'
 
 function Register() {
@@ -15,10 +15,8 @@ function Register() {
   })
 
   const { name, email, password, password2 } = formData
-
   const dispatch = useDispatch()
   const navigate = useNavigate()
-
   const { isLoading } = useSelector((state) => state.auth)
 
   const onChange = (e) => {
@@ -28,34 +26,40 @@ function Register() {
     }))
   }
 
-  // NOTE: no need for useEffect here as we can catch the
-  // AsyncThunkAction rejection in our onSubmit or redirect them on the
-  // resolution
-  // Side effects shoulld go in event handlers where possible
-  // source: - https://beta.reactjs.org/learn/keeping-components-pure#where-you-can-cause-side-effects
-
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault()
+
+    // Client-side validation
+    if (!name || !email || !password || !password2) {
+      toast.error('Please fill in all fields')
+      return
+    }
 
     if (password !== password2) {
       toast.error('Passwords do not match')
-    } else {
+      return
+    }
+
+    try {
+      // Send user registration request
       const userData = {
         name,
         email,
         password,
       }
 
-      dispatch(register(userData))
-        .unwrap()
-        .then((user) => {
-          // NOTE: by unwrapping the AsyncThunkAction we can navigate the user after
-          // getting a good response from our API or catch the AsyncThunkAction
-          // rejection to show an error message
-          toast.success(`Registered new user - ${user.name}`)
-          navigate('/')
-        })
-        .catch(toast.error)
+      const response = await axios.post('http://localhost:5000/api/users', userData)
+
+      // Handle successful registration
+      toast.success('Registration successful!')
+      navigate('/login')  // Navigate to login page after successful registration
+    } catch (error) {
+      // Handle errors from the backend
+      if (error.response && error.response.data.message) {
+        toast.error(error.response.data.message)
+      } else {
+        toast.error('An error occurred. Please try again.')
+      }
     }
   }
 
@@ -69,7 +73,7 @@ function Register() {
         <h3>
           <FaUser /> Register
         </h3>
-        <p style={{fontSize:"14px"}}>Please create an account</p>
+        <p style={{ fontSize: '14px' }}>Please create an account</p>
       </section>
 
       <section className='form'>

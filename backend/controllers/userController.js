@@ -9,28 +9,27 @@ const User = require('../models/userModel')
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body
-  console.log(req.body);
-  
-  // Validation
+
+  // Validation: Ensure all fields are provided
   if (!name || !email || !password) {
-    res.status(400)
-    throw new Error('Please include all fields')
+    return res.status(400).json({
+      message: 'Please include all fields (name, email, password)',
+    })
   }
 
-  // Find if user already exists
+  // Check if user already exists
   const userExists = await User.findOne({ email })
-  console.log(userExists, "hai ky ");
-  
   if (userExists) {
-    res.status(400)
-    throw new Error('User already exists')
+    return res.status(400).json({
+      message: 'User already exists with this email',
+    })
   }
 
   // Hash password
   const salt = await bcrypt.genSalt(10)
   const hashedPassword = await bcrypt.hash(password, salt)
 
-  // Create user
+  // Create new user
   const user = await User.create({
     name,
     email,
@@ -38,17 +37,22 @@ const registerUser = asyncHandler(async (req, res) => {
   })
 
   if (user) {
-    res.status(201).json({
+    // Successfully created user, generate and return token
+    return res.status(201).json({
+      message: 'User registered successfully!',
       _id: user._id,
       name: user.name,
       email: user.email,
       token: generateToken(user._id),
     })
   } else {
-    res.status(400)
-    throw new error('Invalid user data')
+    return res.status(400).json({
+      message: 'Invalid user data, unable to create user',
+    })
   }
 })
+
+
 
 // @desc    Login a user
 // @route   /api/users/login
