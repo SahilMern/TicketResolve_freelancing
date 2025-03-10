@@ -2,81 +2,91 @@ const asyncHandler = require('express-async-handler')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
-const User = require('../models/userModel')
+const User = require('../models/userModel');
 
-// @desc    Register a new user
-// @route   /api/users
-// @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body
+  const { name, email, password } = req.body;
 
-  // Validation: Ensure all fields are provided
   if (!name || !email || !password) {
-    return res.status(400).json({
-      message: 'Please include all fields (name, email, password)',
-    })
+    return res.status(400).json({ success: false, message: 'All fields are required' });
   }
 
-  // Check if user already exists
-  const userExists = await User.findOne({ email })
+  if (password.length < 6) {
+    return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+  }
+
+  const userExists = await User.findOne({ email });
   if (userExists) {
-    return res.status(400).json({
-      message: 'User already exists with this email',
-    })
+    return res.status(400).json({ success: false, message: 'User already exists with this email' });
   }
 
-  // Hash password
-  const salt = await bcrypt.genSalt(10)
-  const hashedPassword = await bcrypt.hash(password, salt)
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({ name, email, password: hashedPassword });
 
-  // Create new user
-  const user = await User.create({
-    name,
-    email,
-    password: hashedPassword,
-  })
-
-  if (user) {
-    // Successfully created user, generate and return token
-    return res.status(201).json({
-      message: 'User registered successfully!',
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      token: generateToken(user._id),
-    })
-  } else {
-    return res.status(400).json({
-      message: 'Invalid user data, unable to create user',
-    })
+    if (user) {
+      return res.status(201).json({
+        success: true,
+        message: 'User registered successfully!',
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          token: generateToken(user._id),
+        },
+      });
+    }
+    return res.status(400).json({ success: false, message: 'User registration failed' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
-})
+});
 
 
-
-// @desc    Login a user
-// @route   /api/users/login
-// @access  Public
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body
+  const { email, password } = req.body;
 
-  const user = await User.findOne({ email })
-  console.log(user, "User in login page ---");
-  
-  // Check user and passwords match
-  if (user && (await bcrypt.compare(password, user.password))) {
-    res.status(200).json({
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: 'Please enter both email and password' });
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    return res.status(401).json({ success: false, message: 'Invalid credentials' });
+  }
+
+  // Generate token
+  const token = generateToken(user._id);
+
+  // Set token in HTTP-only cookie
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // Use secure in production
+    sameSite: 'strict', // Protection against CSRF
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  });
+
+  // Send response without token in body
+  return res.status(200).json({
+    success: true,
+    message: 'Login successful!',
+    user: {
       _id: user._id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id),
-      isAdmin:user.isAdmin,
-    })
-  } else {
-    res.status(401)
-    throw new Error('Invalid credentials')
-  }
-})
+    },
+  });
+});
+
+module.exports = { registerUser, loginUser };
+
+
 
 // @desc    Get current user
 // @route   /api/users/me
@@ -97,8 +107,20 @@ const generateToken = (userId) => {
   })
 }
 
+
+// @desc    Logout user / clear cookie
+// @route   POST /api/users/logout
+// @access  Public
+const logoutUser = asyncHandler(async (req, res) => {
+  res.cookie('token', '', {
+    httpOnly: true,
+    expires: new Date(0) // Immediately expire the cookie
+  });
+  res.status(200).json({ message: 'Logged out successfully' });
+});
 module.exports = {
   registerUser,
   loginUser,
   getMe,
+  logoutUser
 }

@@ -1,6 +1,7 @@
 const path = require('path')
 const express = require('express')
 const cors = require('cors');
+const cookieParser = require('cookie-parser'); // Add this
 require('colors')
 require('dotenv').config()
 const { errorHandler } = require('./middleware/errorMiddleware')
@@ -12,14 +13,17 @@ connectDB()
 
 const app = express()
 
+// CORS configuration
 app.use(cors({
-  origin: 'http://localhost:3000', // React App की URL
+  origin: 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
+  credentials: true, // Allow credentials
+  allowedHeaders: ['Content-Type', 'Authorization'] // Add required headers
 }));
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
+app.use(cookieParser()); // Add cookie parser middleware
 
 // Routes
 app.use('/api/users', require('./routes/userRoutes'))

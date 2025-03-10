@@ -43,31 +43,30 @@ const userModel = require("../models/userModel");
 
 const protect = async (req, res, next) => {
     let token;
-
-    //  हेडर में Authorization चेक करें
-    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
-        try {
-            token = req.headers.authorization.split(" ")[1]; //  "Bearer token" से सिर्फ टोकन लें
-
-            console.log("received token", token);
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            console.log(decoded, "data in middleware");
-            req.user = decoded; //  यूजर डेटा जोड़ें
-
-            
-            req.user = await userModel.findById(decoded.userId).select("-password"); //  यूजर डेटा जोड़ें
-            if (!req.user) {
-              return res.status(401).json({ message: "User not found" });
-          }
-            next();
-        } catch (error) {
-          console.error("JWT Error:", error);
-          res.status(401).json({ message: "Invalid token" });
-        }
-    } else {
-        res.status(401).json({ message: "Not authorized, no token" });
+  
+    // Check cookie instead of header
+    if (req.cookies.token) {
+      try {
+        token = req.cookies.token;
+        
+        // Verify token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  
+        // Get user from token
+        req.user = await User.findById(decoded.id).select('-password');
+        next();
+      } catch (error) {
+        res.status(401);
+        throw new Error('Not authorized');
+      }
     }
-};
+  
+    if (!token) {
+      res.status(401);
+      throw new Error('Not authorized, no token');
+    }
+  };
 
 module.exports = { protect };
+
 
