@@ -8,6 +8,7 @@ import Login from '../../frontend/src/pages/Login'
 import Register from '../../frontend/src/pages/Register'
 import PrivateRoute from './components/PrivateRoute'
 import NewTicket from './pages/NewTicket'
+import MyTickets from './pages/TicketPages/MyTickets'
 
 function App() {
   return (
@@ -39,7 +40,7 @@ function App() {
               path='/tickets'
               element={
                 <PrivateRoute>
-                  <Tickets />
+                  <MyTickets />
                 </PrivateRoute>
               }
             />

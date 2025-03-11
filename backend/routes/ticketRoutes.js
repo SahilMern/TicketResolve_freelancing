@@ -15,7 +15,7 @@ const { protect } = require('../middleware/authMiddleware');
 // router.use('/:ticketId/notes', noteRouter);
 
 // Separate routes for GET, POST, PUT, DELETE
-router.get('/', getTickets); // Handles GET request for tickets
+router.get('/',protect, getTickets); // Handles GET request for tickets
 router.post('/', protect, createTicket); 
 
 router.get('/:id', protect, getTicket); // Handles GET request for a single ticket

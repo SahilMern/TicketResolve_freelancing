@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import Spinner from '../components/Spinner'
-import BackButton from '../components/BackButton'
-import TicketItem from '../components/TicketItem'
+import BackButton from '../../components/BackButton'
+import Spinner from '../../components/Spinner'
+import TicketItem from '../../components/TicketItem'
+
 
 function MyTickets() {
   const [tickets, setTickets] = useState([]) // State to store tickets
@@ -19,7 +20,7 @@ function MyTickets() {
           },
           credentials: 'include', // Include credentials (cookies)
         })
-
+        
         if (!response.ok) {
           throw new Error('Failed to fetch tickets')
         }
@@ -65,4 +66,4 @@ function MyTickets() {
   )
 }
 
-export default MyTickets
+export default MyTickets;
