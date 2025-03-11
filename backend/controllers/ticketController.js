@@ -1,103 +1,117 @@
 const asyncHandler = require('express-async-handler')
-
 const Ticket = require('../models/ticketModel')
-const { message } = require('statuses')
 
-// NOTE: no need to get the user, we already have them on req object from
-// protect middleware. The protect middleware already checks for valid user.
 
-// @desc    Get user tickets
-// @route   GET /api/tickets
-// @access  Private
 const getTickets = asyncHandler(async (req, res) => {
-  const tickets = await Ticket.find({ user: req.user.id })
-  return res.status(200).json({tickets,message:"datass"})
+  try {
+    const tickets = await Ticket.find({ user: req.user.id })
+
+    if (!tickets || tickets.length === 0) {
+      return res.status(404).json({ message: 'No tickets found' })
+    }
+
+    return res.status(200).json({ tickets })
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error', error: error.message })
+  }
 })
 
-// @desc    Get user ticket
-// @route   GET /api/tickets/:id
-// @access  Private
+
 const getTicket = asyncHandler(async (req, res) => {
-  const ticket = await Ticket.findById(req.params.id)
+  try {
+    const ticket = await Ticket.findById(req.params.id)
 
-  if (!ticket) {
-    res.status(404)
-    throw new Error('Ticket not found')
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' })
+    }
+
+    if (ticket.user.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'Not Authorized' })
+    }
+
+    return res.status(200).json(ticket)
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error', error: error.message })
   }
-
-  if (ticket.user.toString() !== req.user.id) {
-    res.status(401)
-    throw new Error('Not Authorized')
-  }
-
-  res.status(200).json(ticket)
 })
 
 // @desc    Create new ticket
 // @route   POST /api/tickets
 // @access  Private
 const createTicket = asyncHandler(async (req, res) => {
-  const { product, description } = req.body
+  try {
+    const { product, description, engineer } = req.body;
 
-  if (!product || !description) {
-    res.status(400)
-    throw new Error('Please add a product and description')
+    console.log('Received ticket data:', product, description, engineer);
+
+    // Validation
+    if (!product || !description || !engineer) {
+      return res.status(400).json({ message: 'Please add a product, description, and engineer' });
+    }
+
+    const newTicket = new Ticket({
+      product,
+      description,
+      engineer, // Add engineer here
+      user: req.user.id, // Assuming req.user is set correctly in the protect middleware
+      status: 'new',
+    });
+
+    const ticket = await newTicket.save();
+
+    return res.status(201).json(ticket); // Return the created ticket
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
   }
+});
 
-  const ticket = await Ticket.create({
-    product,
-    description,
-    user: req.user.id,
-    status: 'new',
-  })
-
-  res.status(201).json(ticket)
-})
 
 // @desc    Delete ticket
 // @route   DELETE /api/tickets/:id
 // @access  Private
 const deleteTicket = asyncHandler(async (req, res) => {
-  const ticket = await Ticket.findById(req.params.id)
+  try {
+    const ticket = await Ticket.findById(req.params.id)
 
-  if (!ticket) {
-    res.status(404)
-    throw new Error('Ticket not found')
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' })
+    }
+
+    if (ticket.user.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'Not Authorized' })
+    }
+
+    await ticket.remove()
+
+    return res.status(200).json({ message: 'Ticket deleted successfully', success: true })
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error', error: error.message })
   }
-
-  if (ticket.user.toString() !== req.user.id) {
-    res.status(401)
-    throw new Error('Not Authorized')
-  }
-
-  await ticket.remove()
-
-  res.status(200).json({ success: true })
 })
 
 // @desc    Update ticket
 // @route   PUT /api/tickets/:id
 // @access  Private
 const updateTicket = asyncHandler(async (req, res) => {
-  const ticket = await Ticket.findById(req.params.id)
+  try {
+    const ticket = await Ticket.findById(req.params.id)
 
-  if (!ticket) {
-    res.status(404)
-    throw new Error('Ticket not found')
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' })
+    }
+
+    if (ticket.user.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'Not Authorized' })
+    }
+
+    // Validate body data (you can add specific validations as needed)
+    const updatedTicket = await Ticket.findByIdAndUpdate(req.params.id, req.body, { new: true })
+
+    return res.status(200).json(updatedTicket)
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error', error: error.message })
   }
-
-  if (ticket.user.toString() !== req.user.id) {
-    res.status(401)
-    throw new Error('Not Authorized')
-  }
-
-  const updatedTicket = await Ticket.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true }
-  )
-
-  res.status(200).json(updatedTicket)
 })
 
 module.exports = {

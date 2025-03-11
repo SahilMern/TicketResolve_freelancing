@@ -1,27 +1,25 @@
-const express = require('express')
-const router = express.Router()
+const express = require('express');
+const router = express.Router();
 const {
   getTickets,
   getTicket,
   createTicket,
   deleteTicket,
   updateTicket,
-} = require('../controllers/ticketController')
+} = require('../controllers/ticketController');
 
-const { protect } = require('../middleware/authMiddleware')
+const { protect } = require('../middleware/authMiddleware');
 
 // Re-route into note router
-const noteRouter = require('./noteRoutes')
-router.use('/:ticketId/notes', noteRouter)
+// const noteRouter = require('./noteRoutes');
+// router.use('/:ticketId/notes', noteRouter);
 
-// router.route('/').get(protect, getTickets).post(protect, createTicket)
-router.route('/').get(getTickets)
+// Separate routes for GET, POST, PUT, DELETE
+router.get('/', getTickets); // Handles GET request for tickets
+router.post('/', protect, createTicket); 
 
+router.get('/:id', protect, getTicket); // Handles GET request for a single ticket
+router.delete('/:id', protect, deleteTicket); // Handles DELETE request for a ticket
+router.put('/:id', protect, updateTicket); // Handles PUT request to update a ticket
 
-router
-  .route('/:id')
-  .get(protect, getTicket)
-  .delete(protect, deleteTicket)
-  .put(protect, updateTicket)
-
-module.exports = router
+module.exports = router;
