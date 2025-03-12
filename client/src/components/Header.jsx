@@ -1,4 +1,4 @@
-import { FaSignInAlt, FaSignOutAlt, FaUser } from 'react-icons/fa'
+import { FaSignInAlt, FaSignOutAlt, FaUser, FaCogs } from 'react-icons/fa'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { logout } from '../features/auth/authSlice'
@@ -7,7 +7,10 @@ import axios from 'axios';
 function Header() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+
+  // Get user data from Redux store
   const { user } = useSelector((state) => state.auth)
+  console.log(user, "user in header"); // Log the user data to check if it's correct
 
   const onLogout = async () => {
     try {
@@ -18,7 +21,7 @@ function Header() {
       
       // Clear Redux state
       dispatch(logout())
-      navigate('/')
+      navigate('/') // Redirect to homepage after logout
     } catch (error) {
       console.error('Logout error:', error)
     }
@@ -35,13 +38,15 @@ function Header() {
       <ul>
         {user ? (
           <>
+            {/* Check if user is an admin */}
             {user.isAdmin && (
               <li>
                 <button className='btn' onClick={() => navigate('/dashboard')}>
-                  Dashboard
+                  <FaCogs /> Dashboard
                 </button>
               </li>
             )}
+            {/* Logout button */}
             <li>
               <button className='btn' onClick={onLogout}>
                 <FaSignOutAlt /> Logout
@@ -50,6 +55,7 @@ function Header() {
           </>
         ) : (
           <>
+            {/* Login and Register buttons for unauthenticated users */}
             <li>
               <Link to='/login'>
                 <FaSignInAlt /> Login
@@ -67,4 +73,4 @@ function Header() {
   )
 }
 
-export default Header
+export default Header;

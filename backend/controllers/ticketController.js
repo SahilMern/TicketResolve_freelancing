@@ -10,11 +10,13 @@ const getTickets = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: 'No tickets found' })
     }
 
-    return res.status(200).json({ tickets })
+    return res.status(200).json({ tickets }) // Return the tickets in the response
   } catch (error) {
+    console.error(error) // Log the error for debugging
     return res.status(500).json({ message: 'Server error', error: error.message })
   }
 })
+
 
 
 const getTicket = asyncHandler(async (req, res) => {

@@ -47,7 +47,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ success: false, message: 'Please enter both email and password' });
+    return res.status(400).json({ success: false, message: 'Please add both email and password' });
   }
 
   const user = await User.findOne({ email });
@@ -61,28 +61,28 @@ const loginUser = asyncHandler(async (req, res) => {
     return res.status(401).json({ success: false, message: 'Invalid credentials' });
   }
 
-  // Generate token
+  // Generate token and send response with user data including isAdmin
   const token = generateToken(user._id);
 
-  // Set token in HTTP-only cookie
   res.cookie('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // Use secure in production
-    sameSite: 'strict', // Protection against CSRF
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    secure: process.env.NODE_ENV === 'production', // For secure cookies in production
+    sameSite: 'strict',
+    maxAge: 30 * 24 * 60 * 60 * 1000, // Cookie expiration of 30 days
   });
 
-  // Send response without token in body
   return res.status(200).json({
     success: true,
-    message: 'Login successful!',
+    message: 'Login successful',
     user: {
       _id: user._id,
       name: user.name,
       email: user.email,
+      isAdmin: user.isAdmin, // Ensure `isAdmin` is included in the response
     },
   });
 });
+
 
 module.exports = { registerUser, loginUser };
 

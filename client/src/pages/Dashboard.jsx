@@ -1,31 +1,46 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "../styles/Dashboard.css";  // Link to CSS file
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+import "../styles/Dashboard.css"; // Link to CSS file
 
 const Dashboard = () => {
   const [tickets, setTickets] = useState([]);
   const [ticketSummary, setTicketSummary] = useState({
     total: 0,
     open: 0,
-    resolved: 0
+    resolved: 0,
   });
 
-  // useEffect(() => {
-  //   axios.get("http://localhost:5000/api/tickets").then((response) => {
-  //     if (response.data.success) {
-  //       setTickets(response.data.data.tickets);
-  //       setTicketSummary({
-  //         total: response.data.data.total,
-  //         open: response.data.data.open,
-  //         resolved: response.data.data.closed
-  //       });
-  //     }
-  //   });
-  // }, []);
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  useEffect(() => {
+    // Fetch all tickets and summary from the API
+    const fetchTickets = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/admin/tickets");
+        if (response.data.success) {
+          setTickets(response.data.data.tickets);
+          setTicketSummary({
+            total: response.data.data.total,
+            open: response.data.data.open,
+            resolved: response.data.data.resolved,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching tickets:", error);
+      }
+    };
+
+    fetchTickets();
+  }, []);
+
+  const viewTicket = (ticketId) => {
+    // Use navigate to redirect to the single ticket page
+    navigate(`/dashboard/${ticketId}`);
+  };
 
   return (
-    <div className="container">     
-
+    <div className="container">
       {/* Card Layout */}
       <div className="card-layout">
         <div className="card" style={{ width: "18rem", margin: "10px" }}>
@@ -70,7 +85,9 @@ const Dashboard = () => {
             <tbody>
               {tickets.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="text-center">No tickets to show</td>
+                  <td colSpan="9" className="text-center">
+                    No tickets to show
+                  </td>
                 </tr>
               ) : (
                 tickets.map((ticket) => (
@@ -82,8 +99,17 @@ const Dashboard = () => {
                     <td>{ticket.description}</td>
                     <td className={ticket.status.toLowerCase()}>{ticket.status}</td>
                     <td>{new Date(ticket.createdAt).toLocaleDateString()}</td>
-                    <td>/* Action buttons */</td>
-                    <td>/* Assign button */</td>
+                    <td>
+                      <button
+                        onClick={() => viewTicket(ticket._id)}
+                        className="btn btn-primary"
+                      >
+                        View
+                      </button>
+                    </td>
+                    <td>
+                      <button className="btn btn-secondary">Assign</button>
+                    </td>
                   </tr>
                 ))
               )}

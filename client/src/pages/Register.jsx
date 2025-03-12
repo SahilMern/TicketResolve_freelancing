@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { FaUser } from 'react-icons/fa';
 import axios from 'axios';
 import Spinner from '../components/Spinner';
+import { useSelector } from 'react-redux'; // Import useSelector to get the user state
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -17,15 +18,23 @@ function Register() {
   const { name, email, password, password2 } = formData;
   const navigate = useNavigate();
 
+  // Get user state from redux
+  const { user } = useSelector((state) => state.auth);
+
   // Track if the component is mounted
   const [isMounted, setIsMounted] = useState(true);
 
   useEffect(() => {
+    // If user is already logged in, redirect them to the home or dashboard page
+    if (user) {
+      navigate(user.isAdmin ? '/dashboard' : '/');
+    }
+
     return () => {
       // Cleanup function: set isMounted to false when the component unmounts
       setIsMounted(false);
     };
-  }, []);
+  }, [user, navigate]); // Depend on user and navigate to check for changes
 
   const onChange = (e) => {
     setFormData((prevState) => ({
@@ -62,7 +71,7 @@ function Register() {
       // Only update state if the component is still mounted
       if (isMounted) {
         toast.success(response.data.message || 'Registration successful!');
-        navigate('/login'); // Navigate to login page
+        navigate('/login'); // Navigate to login page after successful registration
       }
     } catch (error) {
       // Only update state if the component is still mounted

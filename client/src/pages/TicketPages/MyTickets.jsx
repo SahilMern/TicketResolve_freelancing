@@ -3,7 +3,6 @@ import BackButton from '../../components/BackButton'
 import Spinner from '../../components/Spinner'
 import TicketItem from '../../components/TicketItem'
 
-
 function MyTickets() {
   const [tickets, setTickets] = useState([]) // State to store tickets
   const [loading, setLoading] = useState(true) // State to track loading
@@ -26,7 +25,7 @@ function MyTickets() {
         }
 
         const data = await response.json()
-        setTickets(data) // Store the fetched tickets in state
+        setTickets(data.tickets) // Adjusted to get tickets from the response
         setLoading(false) // Set loading to false once data is fetched
       } catch (error) {
         setError(error.message) // Set error message if there's an issue

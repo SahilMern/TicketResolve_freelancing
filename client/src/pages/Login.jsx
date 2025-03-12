@@ -5,6 +5,7 @@ import { FaSignInAlt } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../features/auth/authSlice';
 import axios from 'axios';
+import Spinner from '../components/Spinner'; // Import Spinner
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -15,14 +16,21 @@ function Login() {
   const { email, password } = formData;
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { isLoading } = useSelector((state) => state.auth);
+  
+  // Access user and loading state from redux store
+  const { user, isLoading } = useSelector((state) => state.auth);
 
   // Track component mount status
   const [isMounted, setIsMounted] = useState(true);
 
   useEffect(() => {
+    // If the user is already logged in, redirect to the dashboard or home page
+    if (user) {
+      navigate(user.isAdmin ? '/dashboard' : '/');
+    }
+
     return () => setIsMounted(false);
-  }, []);
+  }, [navigate, user]);
 
   const onChange = (e) => {
     setFormData((prevState) => ({
@@ -41,10 +49,10 @@ function Login() {
 
     try {
       dispatch(loginStart());
-      
+
       // Add withCredentials to handle cookies
       const response = await axios.post(
-        'http://localhost:5000/api/users/login', 
+        'http://localhost:5000/api/users/login',
         { email, password },
         { withCredentials: true }
       );
@@ -54,14 +62,20 @@ function Login() {
       if (response.data.success) {
         dispatch(loginSuccess(response.data.user));
         toast.success(`Welcome ${response.data.user.name}!`);
-        navigate('/dashboard');
+
+        // Redirect to dashboard if the user is an admin, else home page
+        if (response.data.user.isAdmin) {
+          navigate('/dashboard');
+        } else {
+          navigate('/'); // Regular user goes to the home page
+        }
       }
     } catch (error) {
       if (!isMounted) return;
-      
-      const errorMessage = error.response?.data?.message || 
+
+      const errorMessage =
+        error.response?.data?.message ||
         'Login failed. Please check your credentials';
-      
       dispatch(loginFailure(errorMessage));
       toast.error(errorMessage);
     }
@@ -69,47 +83,43 @@ function Login() {
 
   return (
     <>
-      <section className="heading">
+      <section className='heading'>
         <h3>
           <FaSignInAlt /> Login
         </h3>
         <p style={{ fontSize: '14px' }}>Please log in to continue</p>
       </section>
 
-      <section className="form-container">
-        <form className="form" onSubmit={onSubmit}>
-          <div className="form-group">
+      <section className='form-container'>
+        <form className='form' onSubmit={onSubmit}>
+          <div className='form-group'>
             <input
-              type="email"
-              className="form-control"
-              id="email"
-              name="email"
+              type='email'
+              className='form-control'
+              id='email'
+              name='email'
               value={email}
               onChange={onChange}
-              placeholder="Enter your email"
+              placeholder='Enter your email'
               required
-              autoComplete="email"
+              autoComplete='email'
             />
           </div>
-          <div className="form-group">
+          <div className='form-group'>
             <input
-              type="password"
-              className="form-control"
-              id="password"
-              name="password"
+              type='password'
+              className='form-control'
+              id='password'
+              name='password'
               value={password}
               onChange={onChange}
-              placeholder="Enter password"
+              placeholder='Enter password'
               required
-              autoComplete="current-password"
+              autoComplete='current-password'
             />
           </div>
-          <div className="form-group">
-            <button 
-              className="btn btn-block" 
-              type="submit"
-              disabled={isLoading}
-            >
+          <div className='form-group'>
+            <button className='btn btn-block' type='submit' disabled={isLoading}>
               {isLoading ? <Spinner /> : 'Login'}
             </button>
           </div>

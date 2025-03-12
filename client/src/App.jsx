@@ -2,13 +2,15 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import Header from './components/Header'
-import Home from '../../frontend/src/pages/Home'
-import Dashboard from '../../frontend/src/pages/Dashboard'
-import Login from '../../frontend/src/pages/Login'
-import Register from '../../frontend/src/pages/Register'
-import PrivateRoute from './components/PrivateRoute'
+import Home from './pages/Home'
+import Login from './pages/Login'
+import Register from './pages/Register'
 import NewTicket from './pages/NewTicket'
+import PrivateRoute from './components/PrivateRoute'
 import MyTickets from './pages/TicketPages/MyTickets'
+import Dashboard from './pages/Dashboard'
+import AdminPrivateRoute from './components/AdminPrivateRoutes'
+import SingleTicket from './pages/SingleTicket'
 
 function App() {
   return (
@@ -16,16 +18,8 @@ function App() {
       <Router>
         <div className='container'>
           <Header />
-          <Routes>
+          {/* <Routes>
             <Route path='/' element={<Home />} />
-            <Route
-              path='/dashboard'
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
             <Route path='/login' element={<Login />} />
             <Route path='/register' element={<Register />} />
             <Route
@@ -36,6 +30,7 @@ function App() {
                 </PrivateRoute>
               }
             />
+            
             <Route
               path='/tickets'
               element={
@@ -44,14 +39,48 @@ function App() {
                 </PrivateRoute>
               }
             />
-            {/* <Route
-              path='/ticket/:ticketId'
+
+          </Routes> */}
+
+          <Routes>
+            <Route path='/' element={<Home />} />
+            <Route path='/login' element={<Login />} />
+            <Route path='/register' element={<Register />} />
+            //Ticket Routes
+            <Route
+              path='/new-ticket'
               element={
                 <PrivateRoute>
-                  <Ticket />
+                  <NewTicket />
                 </PrivateRoute>
               }
-            /> */}
+            />
+            //GET MY All tickets
+            <Route
+              path='/tickets'
+              element={
+                <PrivateRoute>
+                  <MyTickets />
+                </PrivateRoute>
+              }
+            />
+            //Admin PrivateRoute routes
+            <Route
+              path='/dashboard'
+              element={
+                <AdminPrivateRoute adminOnly={true}>
+                  <Dashboard />
+                </AdminPrivateRoute>
+              }
+            />
+            <Route
+              path='/dashboard/:id'
+              element={
+                <AdminPrivateRoute adminOnly={true}>
+                  <SingleTicket />
+                </AdminPrivateRoute>
+              }
+            />
           </Routes>
         </div>
       </Router>
@@ -61,3 +90,13 @@ function App() {
 }
 
 export default App
+{
+  /* <Route
+              path='/ticket/:ticketId'
+              element={
+                <PrivateRoute>
+                  <Ticket />
+                </PrivateRoute>
+              }
+            /> */
+}
