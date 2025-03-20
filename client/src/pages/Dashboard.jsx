@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
-import "../styles/Dashboard.css"; // Link to CSS file
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import '../styles/Dashboard.css'; // Link to CSS file
 
 const Dashboard = () => {
   const [tickets, setTickets] = useState([]);
@@ -17,7 +17,10 @@ const Dashboard = () => {
     // Fetch all tickets and summary from the API
     const fetchTickets = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/admin/tickets");
+        const response = await axios.get('http://localhost:5000/api/admin/tickets', {
+          withCredentials: true,
+        });
+
         if (response.data.success) {
           setTickets(response.data.data.tickets);
           setTicketSummary({
@@ -27,7 +30,7 @@ const Dashboard = () => {
           });
         }
       } catch (error) {
-        console.error("Error fetching tickets:", error);
+        console.error('Error fetching tickets:', error);
       }
     };
 
@@ -43,22 +46,22 @@ const Dashboard = () => {
     <div className="container">
       {/* Card Layout */}
       <div className="card-layout">
-        <div className="card" style={{ width: "18rem", margin: "10px" }}>
+        <div className="card" style={{ width: '18rem', margin: '10px' }}>
           <div className="card-body">
-            <div className="text-middle card-title h5">Total Tickets</div>
-            <h3 className="text-middle">{ticketSummary.total}</h3>
+            <div className="card-title h5 text-center">Total Tickets</div>
+            <h3 className="text-center">{ticketSummary.total}</h3>
           </div>
         </div>
-        <div className="card" style={{ width: "18rem", margin: "10px" }}>
+        <div className="card" style={{ width: '18rem', margin: '10px' }}>
           <div className="card-body">
-            <div className="text-middle card-title h5">Open Tickets</div>
-            <h3 className="text-middle">{ticketSummary.open}</h3>
+            <div className="card-title h5 text-center">Open Tickets</div>
+            <h3 className="text-center">{ticketSummary.open}</h3>
           </div>
         </div>
-        <div className="card" style={{ width: "18rem", margin: "10px" }}>
+        <div className="card" style={{ width: '18rem', margin: '10px' }}>
           <div className="card-body">
-            <div className="text-middle card-title h5">Resolved Tickets</div>
-            <h3 className="text-middle">{ticketSummary.resolved}</h3>
+            <div className="card-title h5 text-center">Resolved Tickets</div>
+            <h3 className="text-center">{ticketSummary.resolved}</h3>
           </div>
         </div>
       </div>
@@ -92,9 +95,9 @@ const Dashboard = () => {
               ) : (
                 tickets.map((ticket) => (
                   <tr key={ticket._id}>
-                    <td>{ticket.user}</td>
-                    <td>{ticket.userName}</td>
-                    <td>{ticket.projectName}</td>
+                    <td>{ticket.user?.email}</td> {/* Accessing the populated user email */}
+                    <td>{ticket.user?.name}</td>  {/* Accessing the populated user name */}
+                    <td>{ticket.product?.name}</td> {/* Accessing the populated project/product name */}
                     <td>{ticket.issueTitle}</td>
                     <td>{ticket.description}</td>
                     <td className={ticket.status.toLowerCase()}>{ticket.status}</td>

@@ -5,7 +5,8 @@ const Ticket = require('../models/ticketModel')
 const getTickets = asyncHandler(async (req, res) => {
   try {
     const tickets = await Ticket.find({ user: req.user.id })
-
+    console.log("HYEYEYEYEY");
+    
     if (!tickets || tickets.length === 0) {
       return res.status(404).json({ message: 'No tickets found' })
     }
