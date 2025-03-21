@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const ticketSchema = mongoose.Schema(
   {
@@ -22,10 +22,14 @@ const ticketSchema = mongoose.Schema(
       enum: ['new', 'open', 'closed'],
       default: 'new',
     },
+    notes: [
+      {
+        text: String,
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
-  {
-    timestamps: true,
-  }
-)
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('Ticket', ticketSchema)
+module.exports = mongoose.model('Ticket', ticketSchema);

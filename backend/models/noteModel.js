@@ -1,41 +1,24 @@
 const mongoose = require('mongoose');
 
-const TicketSchema = new mongoose.Schema(
+const NoteSchema = new mongoose.Schema(
   {
+    ticket: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Ticket',
+      required: true,
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
-    product: {
+    text: {
       type: String,
-      required: [true, 'Please enter a product'],
+      required: true,
     },
-    description: {
-      type: String,
-      required: [true, 'Please enter a description of the issue'],
-    },
-    status: {
-      type: String,
-      enum: ['Open', 'Resolved', 'Closed'],
-      default: 'Open',
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    closedAt: {
-      type: Date,
-    },
-    // ✅ Ensure notes are stored as an array of ObjectIds referencing the Note model
-    notes: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Note', // Ensure this matches your Note model name
-      },
-    ],
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model('Ticket', TicketSchema);
+module.exports = mongoose.model('Note', NoteSchema);
+ 

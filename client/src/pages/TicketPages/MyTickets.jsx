@@ -1,49 +1,47 @@
-import { useState, useEffect } from 'react'
-import BackButton from '../../components/BackButton'
-import Spinner from '../../components/Spinner'
-import TicketItem from '../../components/TicketItem'
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import BackButton from '../../components/BackButton';
+import Spinner from '../../components/Spinner';
+import TicketItem from '../../components/TicketItem';
 
 function MyTickets() {
-  const [tickets, setTickets] = useState([]) // State to store tickets
-  const [loading, setLoading] = useState(true) // State to track loading
-  const [error, setError] = useState(null) // State to track errors
+  const [tickets, setTickets] = useState([]); // State to store tickets
+  const [loading, setLoading] = useState(true); // State to track loading
+  const [error, setError] = useState(null); // State to track errors
 
   useEffect(() => {
-    // Function to fetch tickets from API
     const fetchTickets = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/tickets', {
-          method: 'GET',
+        const response = await axios.get('http://localhost:5000/api/tickets', {
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include', // Include credentials (cookies)
-        })
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch tickets')
+          withCredentials: true, // ✅ Fixed misspelling
+        });
+
+        console.log(response.data, "Fetched Tickets");
+
+        if (!response.data || !Array.isArray(response.data.tickets)) {
+          throw new Error('Invalid data format received');
         }
 
-        const data = await response.json()
-        setTickets(data.tickets) // Adjusted to get tickets from the response
-        setLoading(false) // Set loading to false once data is fetched
+        setTickets(response.data.tickets);
       } catch (error) {
-        setError(error.message) // Set error message if there's an issue
-        setLoading(false) // Set loading to false even on error
+        setError(error.response?.data?.message || 'Failed to fetch tickets');
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
-    fetchTickets()
-  }, []) // Empty dependency array means it runs once when the component mounts
+    fetchTickets();
+  }, []); // Runs once when component mounts
 
-  // If tickets are still loading, show the spinner
   if (loading) {
-    return <Spinner />
+    return <Spinner />;
   }
 
-  // If there's an error, display the error message
   if (error) {
-    return <p className="error">{error}</p>
+    return <p className="error">{error}</p>;
   }
 
   return (
@@ -57,12 +55,14 @@ function MyTickets() {
           <div>Status</div>
           <div></div>
         </div>
-        {tickets.map((ticket) => (
-          <TicketItem key={ticket._id} ticket={ticket} />
-        ))}
+        {tickets.length > 0 ? (
+          tickets.map((ticket) => <TicketItem key={ticket._id} ticket={ticket} />)
+        ) : (
+          <p>No tickets found</p>
+        )}
       </div>
     </>
-  )
+  );
 }
 
 export default MyTickets;

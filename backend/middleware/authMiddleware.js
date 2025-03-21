@@ -29,6 +29,8 @@ const protectAdmin = async (req, res, next) => {
   if (!req.user || !req.user.isAdmin) {
     return res.status(403).json({ message: 'Not authorized as an admin' });
   }
+  console.log(req.user.isAdmin, "req.user.isAdmin");
+  
   next();
 };
 

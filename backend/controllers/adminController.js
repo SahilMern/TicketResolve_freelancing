@@ -1,141 +1,61 @@
-const Ticket = require('../models/ticketModel')
+const Ticket = require('../models/ticketModel');
 
-// Get all tickets
+// ✅ Get all tickets
 const getAllTickets = async (req, res) => {
   try {
-    // Fetch all tickets and populate relevant fields (user and product/project)
-    const tickets = await Ticket.find()
-      .populate('user', 'name email')  // Populate user with name and email
-      .populate('product', 'name')     // Populate product/project name, assuming `product` is a reference to a Project model
-      .exec();
-
-    // Calculate summary values
-    const total = tickets.length;
-    const open = tickets.filter(ticket => ticket.status === 'Open').length;
-    const resolved = tickets.filter(ticket => ticket.status === 'Resolved').length;
-
-    // Respond with the tickets and summary
-    res.status(200).json({
-      success: true,
-      data: {
-        tickets,
-        total,
-        open,
-        resolved,
-      },
-    });
+    const tickets = await Ticket.find().populate('user', 'name email').exec();
+    res.status(200).json({ success: true, tickets });
   } catch (error) {
-    console.error('Error fetching tickets:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server Error',
-    });
+    res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
 
-
-
-// Get ticket by ID
+// ✅ Get a single ticket by ID
 const getTicketById = async (req, res) => {
-  const { id } = req.params;
-  console.log(id, "ssssss -----------");
-  
   try {
-    const ticket = await Ticket.findById(id);
-    if (!ticket) {
-      return res.status(404).json({
-        success: false,
-        message: 'Ticket not found',
-      });
-    }
+    const ticket = await Ticket.findById(req.params.id).populate('user', 'name email');
+    if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
 
-    res.status(200).json({
-      success: true,
-      data: ticket,
-    });
+    res.status(200).json({ success: true, data: ticket });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: 'Server Error',
-    });
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 
-
-const getSingleTicket = async (req, res) => {
+// ✅ Close Ticket with Mandatory Note
+const closeTicket = async (req, res) => {
   try {
-    const { id } = req.params
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid ticket ID' })
+    const { id } = req.params;
+    const { note } = req.body;
+
+    if (!note || !note.trim()) {
+      return res.status(400).json({ message: 'Closing note is required' });
     }
 
-    const ticket = await Ticket.findById(id).populate('user', 'name email')
+    const ticket = await Ticket.findById(id);
+    if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
 
-    if (!ticket) {
-      return res.status(404).json({ message: 'Ticket not found' })
-    }
+    ticket.status = 'closed';
+    ticket.notes.push({ text: `Ticket closed: ${note}` }); // ✅ Note ko ticket ke andar store karein
+    ticket.closedAt = new Date();
 
-    res.status(200).json(ticket)
+    await ticket.save();
+
+    res.status(200).json({ message: 'Ticket closed successfully', ticket });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message })
+    res.status(500).json({ message: 'Server Error' });
   }
-}
+};
 
-export const closeTicket = async (req, res) => {
-  try {
-    const { id } = req.params
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid ticket ID' })
-    }
+// module.exports = { getAllTickets, getTicketById, closeTicket };
 
-    const ticket = await Ticket.findById(id)
-
-    if (!ticket) {
-      return res.status(404).json({ message: 'Ticket not found' })
-    }
-
-    ticket.status = 'closed'
-    await ticket.save()
-
-    res.status(200).json({ message: 'Ticket closed successfully', ticket })
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message })
-  }
-}
-
+// ✅ Add a note to a ticket
 const addNoteToTicket = async (req, res) => {
-  try {
-    const { id } = req.params
-    const { text } = req.body
+  const note = new Note({ ticket: req.params.id, user: req.user.id, text: req.body.text });
+  await note.save();
+  await Ticket.findByIdAndUpdate(req.params.id, { $push: { notes: note._id } });
 
-    if (!text) {
-      return res.status(400).json({ message: 'Note text is required' })
-    }
+  res.status(201).json({ success: true, note });
+};
 
-    const ticket = await Ticket.findById(id)
-
-    if (!ticket) {
-      return res.status(404).json({ message: 'Ticket not found' })
-    }
-
-    const note = new Note({
-      ticket: id,
-      user: req.user.id,
-      text,
-    })
-
-    await note.save()
-
-    res.status(201).json(note)
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message })
-  }
-}
-
-
-module.exports = {
-    getAllTickets,
-    getTicketById
-  }
-  
+module.exports = { getAllTickets, getTicketById, closeTicket, addNoteToTicket };

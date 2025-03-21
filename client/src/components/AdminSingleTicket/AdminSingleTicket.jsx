@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
-import Modal from 'react-modal';
-import { FaPlus } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
+import Modal from 'react-modal';
 import BackButton from '../BackButton';
 import Spinner from '../Spinner';
 
@@ -12,9 +11,6 @@ const customStyles = {
     width: '600px',
     top: '50%',
     left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    marginRight: '-50%',
     transform: 'translate(-50%, -50%)',
     position: 'relative',
   },
@@ -23,11 +19,11 @@ const customStyles = {
 Modal.setAppElement('#root');
 
 function AdminSingleTicket() {
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [noteText, setNoteText] = useState('');
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [closeModalIsOpen, setCloseModalIsOpen] = useState(false);
+  const [closeNote, setCloseNote] = useState('');
 
   const { ticketId } = useParams();
 
@@ -40,7 +36,8 @@ function AdminSingleTicket() {
         );
         setTicket(data.data);
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to fetch ticket');
+        console.error(err);
+        setError('Failed to fetch ticket');
       } finally {
         setLoading(false);
       }
@@ -49,54 +46,36 @@ function AdminSingleTicket() {
     fetchTicket();
   }, [ticketId]);
 
-  // ✅ Function to close a ticket
-  const onTicketClose = async (e) => {
-    e.preventDefault();
+  const onTicketClose = async () => {
+    if (!closeNote.trim()) return toast.error('Closing note is required');
+
     try {
-      await axios.put(
+      const { data } = await axios.put(
         `http://localhost:5000/api/admin/tickets/${ticketId}/close`,
-        {},
+        { note: closeNote },
         { withCredentials: true }
       );
-      setTicket((prev) => ({ ...prev, status: 'Closed' }));
+
+      setTicket((prev) => ({
+        ...prev,
+        status: 'Closed',
+        notes: [...prev.notes, { text: `Ticket closed: ${closeNote}` }],
+      }));
+
       toast.success('Ticket closed successfully');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to close ticket');
-    }
-  };
-
-  // ✅ Function to open modal
-  const openModal = () => setModalIsOpen(true);
-
-  // ✅ Function to close modal
-  const closeModal = () => setModalIsOpen(false);
-
-  // ✅ Function to submit a note
-  const onNoteSubmit = async (e) => {
-    e.preventDefault();
-    if (!noteText.trim()) return toast.error('Note text is required');
-
-    try {
-      const { data } = await axios.post(
-        `http://localhost:5000/api/admin/tickets/${ticketId}/notes`,
-        { text: noteText },
-        { withCredentials: true }
-      );
-      toast.success('Note added successfully');
-      closeModal();
-      setNoteText('');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to add note');
+      setCloseModalIsOpen(false);
+      setCloseNote('');
+    } catch {
+      toast.error('Failed to close ticket');
     }
   };
 
   if (loading) return <Spinner />;
-  if (error) return <p className="error">{error}</p>;
-  if (!ticket) return <p>No ticket found</p>;
+  if (error) return <p className='error'>{error}</p>;
 
   return (
-    <div className="ticket-page">
-      <header className="ticket-header">
+    <div className='ticket-page'>
+      <header className='ticket-header'>
         <BackButton />
         <h2>
           Ticket ID: {ticket._id}
@@ -105,55 +84,55 @@ function AdminSingleTicket() {
           </span>
         </h2>
         <h3>Date Submitted: {new Date(ticket.createdAt).toLocaleString()}</h3>
-        <h3>Product: {ticket.product?.name || 'N/A'}</h3>
+        <h3>Product: {ticket.product}</h3>
         <hr />
-        <div className="ticket-desc">
+        <div className='ticket-desc'>
           <h3>Description of Issue</h3>
           <p>{ticket.description}</p>
         </div>
         <h2>Notes</h2>
       </header>
 
+      <div className='notes-section'>
+        {(!ticket.notes || ticket.notes.length === 0) ? (
+          <p>No notes added yet.</p>
+        ) : (
+          ticket.notes.map((note, index) => (
+            <div key={index} className='note'>
+              <strong>Note {index + 1}:</strong> {note.text}
+            </div>
+          ))
+        )}
+      </div>
+
       {ticket.status !== 'Closed' && (
-        <button onClick={openModal} className="btn">
-          <FaPlus /> Add Note
+        <button onClick={() => setCloseModalIsOpen(true)} className='btn btn-danger'>
+          Close Ticket
         </button>
       )}
 
       <Modal
-        isOpen={modalIsOpen}
-        onRequestClose={closeModal}
+        isOpen={closeModalIsOpen}
+        onRequestClose={() => setCloseModalIsOpen(false)}
         style={customStyles}
-        contentLabel="Add Note"
+        contentLabel='Close Ticket'
       >
-        <h2>Add Note</h2>
-        <button className="btn-close" onClick={closeModal}>
-          X
-        </button>
-        <form onSubmit={onNoteSubmit}>
-          <div className="form-group">
+        <h2>Close Ticket</h2>
+        <button className='btn-close' onClick={() => setCloseModalIsOpen(false)}>X</button>
+        <form onSubmit={(e) => { e.preventDefault(); onTicketClose(); }}>
+          <div className='form-group'>
             <textarea
-              name="noteText"
-              id="noteText"
-              className="form-control"
-              placeholder="Note text"
-              value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
+              className='form-control'
+              placeholder='Closing note is required'
+              value={closeNote}
+              onChange={(e) => setCloseNote(e.target.value)}
             ></textarea>
           </div>
-          <div className="form-group">
-            <button className="btn" type="submit">
-              Submit
-            </button>
-          </div>
+          <button className='btn btn-danger' type='submit'>
+            Close Ticket
+          </button>
         </form>
       </Modal>
-
-      {ticket.status !== 'Closed' && (
-        <button onClick={onTicketClose} className="btn btn-block btn-danger">
-          Close Ticket
-        </button>
-      )}
     </div>
   );
 }
