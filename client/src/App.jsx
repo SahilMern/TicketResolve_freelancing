@@ -10,7 +10,7 @@ import PrivateRoute from './components/PrivateRoute'
 import MyTickets from './pages/TicketPages/MyTickets'
 import Dashboard from './pages/Dashboard'
 import AdminPrivateRoute from './components/AdminPrivateRoutes'
-import SingleTicket from './pages/SingleTicket'
+import SingleTicket from './components/tickets/SingleTicket'
 
 function App() {
   return (
@@ -61,6 +61,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <MyTickets />
+                </PrivateRoute>
+              }
+            />
+             <Route
+              path='/tickets/:ticketId'
+              element={
+                <PrivateRoute>
+                  <SingleTicket />
                 </PrivateRoute>
               }
             />

@@ -30,7 +30,7 @@ function SingleTicket() {
 
   const navigate = useNavigate()
   const { ticketId } = useParams()
-
+  
   useEffect(() => {
     // Fetch ticket and notes data from the API
     const fetchTicketData = async () => {

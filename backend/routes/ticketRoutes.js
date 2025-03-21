@@ -6,6 +6,8 @@ const {
   createTicket,
   deleteTicket,
   updateTicket,
+  getsingleTicket,
+  getSingleTicket,
 } = require('../controllers/ticketController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -18,7 +20,8 @@ const { protect } = require('../middleware/authMiddleware');
 router.get('/',protect, getTickets); // Handles GET request for tickets
 router.post('/', protect, createTicket); 
 
-router.get('/:id', protect, getTicket); // Handles GET request for a single ticket
+router.get('/:id', protect, getTicket);
+router.get('/singleTicket/:id', protect, getSingleTicket); // Handles GET request for a single ticket
 router.delete('/:id', protect, deleteTicket); // Handles DELETE request for a ticket
 router.put('/:id', protect, updateTicket); // Handles PUT request to update a ticket
 
