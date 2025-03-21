@@ -1,6 +1,6 @@
 const asyncHandler = require('express-async-handler')
 const Ticket = require('../models/ticketModel')
-
+const mongoose = require("mongoose")
 const getTickets = asyncHandler(async (req, res) => {
   try {
     const tickets = await Ticket.find({ user: req.user.id })

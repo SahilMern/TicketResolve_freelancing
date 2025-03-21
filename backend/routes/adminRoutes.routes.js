@@ -1,13 +1,24 @@
 const express = require('express');
-const { getTicketById, getAllTickets } = require('../controllers/adminController');
-const { protectAdmin } = require('../middleware/authMiddleware'); // Import the protectAdmin middleware
+const {
+  getAllTickets,
+  getTicketById,
+  closeTicket,
+  addNoteToTicket,
+} = require('../controllers/adminController');
+const { protect, protectAdmin } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// Route to get all tickets - Admin only
-router.get('/tickets', protectAdmin, getAllTickets);
+// ✅ GET all tickets (Admin only)
+router.get('/tickets', protect, protectAdmin, getAllTickets);
 
-// Route to get a specific ticket by ID - Admin only
-router.get('/tickets/:id', protectAdmin, getTicketById);
+// ✅ GET a specific ticket by ID (Admin only)
+router.get('/tickets/:id', protect, protectAdmin, getTicketById);
+
+// ✅ PUT - Close a ticket (Admin only)
+router.put('/tickets/:id/close', protect, protectAdmin, closeTicket);
+
+// ✅ POST - Add a note to a ticket (Admin only)
+router.post('/tickets/:id/notes', protect, protectAdmin, addNoteToTicket);
 
 module.exports = router;

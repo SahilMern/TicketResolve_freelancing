@@ -11,6 +11,7 @@ import MyTickets from './pages/TicketPages/MyTickets'
 import Dashboard from './pages/Dashboard'
 import AdminPrivateRoute from './components/AdminPrivateRoutes'
 import SingleTicket from './components/tickets/SingleTicket'
+import AdminSingleTicket from './components/AdminSingleTicket/AdminSingleTicket'
 
 function App() {
   return (
@@ -82,10 +83,10 @@ function App() {
               }
             />
             <Route
-              path='/dashboard/:id'
+              path='/dashboard/:ticketId'
               element={
                 <AdminPrivateRoute adminOnly={true}>
-                  <SingleTicket />
+                  <AdminSingleTicket />
                 </AdminPrivateRoute>
               }
             />

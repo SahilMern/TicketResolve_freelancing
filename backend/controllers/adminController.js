@@ -38,7 +38,7 @@ const getAllTickets = async (req, res) => {
 // Get ticket by ID
 const getTicketById = async (req, res) => {
   const { id } = req.params;
-  console.log(id, "ssssss");
+  console.log(id, "ssssss -----------");
   
   try {
     const ticket = await Ticket.findById(id);
@@ -61,6 +61,77 @@ const getTicketById = async (req, res) => {
     });
   }
 };
+
+
+const getSingleTicket = async (req, res) => {
+  try {
+    const { id } = req.params
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid ticket ID' })
+    }
+
+    const ticket = await Ticket.findById(id).populate('user', 'name email')
+
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' })
+    }
+
+    res.status(200).json(ticket)
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
+}
+
+export const closeTicket = async (req, res) => {
+  try {
+    const { id } = req.params
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid ticket ID' })
+    }
+
+    const ticket = await Ticket.findById(id)
+
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' })
+    }
+
+    ticket.status = 'closed'
+    await ticket.save()
+
+    res.status(200).json({ message: 'Ticket closed successfully', ticket })
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
+}
+
+const addNoteToTicket = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { text } = req.body
+
+    if (!text) {
+      return res.status(400).json({ message: 'Note text is required' })
+    }
+
+    const ticket = await Ticket.findById(id)
+
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' })
+    }
+
+    const note = new Note({
+      ticket: id,
+      user: req.user.id,
+      text,
+    })
+
+    await note.save()
+
+    res.status(201).json(note)
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
+}
 
 
 module.exports = {
